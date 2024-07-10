@@ -1,0 +1,92 @@
+// Copyright 2021 Allterco Robotics EOOD
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// Shelly is a Trademark of Allterco Robotics
+
+// Based on Shelly Script example: Router Watchdog
+//
+
+let sovolIsOn = true; 
+
+let CONFIG = {
+  endpoints: [
+    "http://192.168.92.101:7125/server/info",
+  ],
+  //number of failures that trigger the reset
+  numberOfFails: 3,
+  //time in seconds to retry a "ping"
+  pingTime: 60,
+};
+
+let endpointIdx = 0;
+let failCounter = 0;
+let pingTimer = null;
+
+function pingEndpoints() {
+  Shelly.call(
+    "switch.getstatus",
+    {
+      //for more than one switch devices use the respective id
+      id: 0,
+    },
+    function (result, error_code, error_message) {
+      //print(JSON.stringify(result));
+      //if we need to check the state of the switch
+      //peek into result.output
+      if (result.output === true) {
+        print("Sovol is on");
+        sovolIsOn = true;
+      }
+      else  {
+        print("Sovol is off");
+        sovolIsOn = false;
+        failCounter = 0;
+      }
+    }
+  )
+  
+  if(sovolIsOn == true) {
+    Shelly.call(
+      "http.get",
+      { url: CONFIG.endpoints[endpointIdx], timeout: CONFIG.httpTimeout },
+      function (response, error_code, error_message) {
+        //http timeout, magic number, not yet documented
+        if (error_code === -114 || error_code === -104) {
+          print("Failed to fetch ", CONFIG.endpoints[endpointIdx]);
+          failCounter++;
+          print("Rotating through endpoints");
+          endpointIdx++;
+          endpointIdx = endpointIdx % CONFIG.endpoints.length;
+        } else {
+          failCounter = 0;
+        }
+  
+        if (failCounter >= CONFIG.numberOfFails) {
+          print("Too many fails, power off...");
+          failCounter = 0;
+          //set the output with toggling back
+          Shelly.call(
+            "Switch.Set",
+            { id: 0, on: false},
+            function () {}
+          );
+          return;
+        }
+      }
+    );
+  }
+}
+
+print("Start watchdog timer");
+pingTimer = Timer.set(CONFIG.pingTime * 1000, true, pingEndpoints);
