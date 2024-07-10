@@ -1,0 +1,30 @@
+let maxtemp = 65;
+var temp;
+
+function Loop(){
+  try{
+      temp= Shelly.getComponentStatus('Temperature', 100).tC;  //Temp ID, mostly 100 to 102
+  }catch(e){print(e);}
+  
+  Shelly.call(
+  "switch.getstatus",
+  {
+    //for more than one switch devices use the respective id
+    id: 0,
+  },
+  function (result, error_code, error_message) {
+    //print(JSON.stringify(result));
+    //if we need to check the state of the switch
+    //peek into result.output
+    if (result.output === true) {
+      //print("Switch is on");
+ 
+      if (temp>maxtemp) {
+        print("too hot, turn printer off");
+        print(temp);   
+        Shelly.call("switch.set",{ id: 0, on: false});  
+      }
+    }
+  })
+}
+Timer.set(2000,true,Loop);
