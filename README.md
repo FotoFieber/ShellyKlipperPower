@@ -10,6 +10,8 @@ Hardware:
 * Temperature sensor(s)
 * Wires/Wago to install the Shelly 1 (see picture)
 
+![Installation on my Sovol SV 08](https://github.com/FotoFieber/ShellyKlipperPower/blob/main/shelly_sv08.jpg?raw=true)
+
 WIth the two scripts you find in this repo installed on the Shelly
 * power off the printer, when temperature sensor measures above 65 degree celsius
 * remote power on or off the printer
