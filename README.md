@@ -5,7 +5,7 @@ Design goals:
 * don't use external scripting/home automation: all processing on the Shelly
 
 Hardware:
-" Shelly 1 pm
+* Shelly 1 pm
 * Shelly Addon
 * Temperature sensor(s)
 * Wires/Wago to install the Shelly 1 (see picture)
